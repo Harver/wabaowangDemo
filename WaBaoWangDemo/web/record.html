@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>订单记录</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+<div class="row" style="margin-bottom: 2rem;">
+    <div class="col-md-12 column">
+        <ul class="nav navcolor nav-pills nav-stacked" id="data_commit">
+            <li class="active" style="font-size: large;">
+                <a href="#">订单记录</a>
+            </li>
+            <li>
+                <div class="row">
+                    <div class="col-md-1 column" align="left"></div>
+                    <div class="col-md-3 column" align="left">商品信息</div>
+                    <div class="col-md-2 column" align="left">数量</div>
+                    <div class="col-md-3 column" align="left">金额</div>
+                    <div class="col-md-3 column" align="left">收货地址</div>
+                </div>
+            </li>
+            <div id="record_list"></div>
+        </ul>
+    </div>
+</div>
+<script src="js/jquery-3.3.1.min.js"></script>
+<script>
+    $(function(){
+        $.get("/data_record_list",function (data) {
+            if(data.msg=="信息获取失败"){
+                alert("信息获取失败");
+            }else {
+                list.data(data);
+            }
+        })
+    });
+    var list  ={
+        data:function (data) {
+            var html="";
+            $.each(data,function (index,obj) {
+                html+='<li>';
+                html+='<div class="row box">';
+                html+='<div class="col-md-1 column" align="left">';
+                html+='<img alt="60x60" style="margin: 1rem;" width="60rem" height="60rem" src=/image/'+obj.a+' />';
+                html+='</div>';
+                html+='<div class="col-md-3 column" align="left">';
+                html+='<p>';
+                html+=''+obj.b+'';
+                html+='</p>';
+                html+='</div>';
+                html+='<div class="col-md-2 column" align="left">';
+                html+='<p style="font-size: large;">'+obj.c+'</p>';
+                html+='</div>';
+                html+='<div class="col-md-3 column" align="left">';
+                html+='<p style="color: red; font-size: large;">¥ <span>'+obj.d+'</span></p>';
+                html+='</div>';
+                html+='<div class="col-md-3 column" align="left">';
+                html+='<p>'+obj.e+'('+obj.f+' 收)</p>';
+                html+='</div>';
+                html+='</div>';
+                html+='</li>';
+            })
+            $("#record_list").html(html);
+        }
+    };
+</script>
+</body>
+</html>

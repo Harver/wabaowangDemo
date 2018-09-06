@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>购物车</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/ext.css"/>
+	</head>
+	<body>
+	<input type="hidden" id="state" />
+	<div class="container">
+	<div class="row box" style="margin-bottom: 2rem; margin-top: 2rem;">
+		<div class="col-md-10 column">
+			<h1 style="color: red; margin: auto;">我的购物车</h1>
+		</div>
+		<div class="col-md-2 column" align="right">
+			<a href="record.html">订单记录</a>
+			<a href="index.html">返回首页</a>
+		</div>
+	</div>
+	<div class="row well well-sm">
+		<div class="col-md-2 column" align="left">
+			<input id="boxs" type="checkbox"/>&nbsp;全选
+		</div>
+		<div class="col-md-3 column" align="left">商品信息</div>
+		<div class="col-md-2 column" align="left">单价</div>
+		<div class="col-md-2 column" align="left">数量</div>
+		<div class="col-md-2 column" align="left">金额</div>
+		<div class="col-md-1 column" align="left">操作</div>
+	</div>
+	<!-- 购物车列表 -->
+	<div id="cart_list"></div>
+	<!--<div  class="row well well-sm box">-->
+		<!--<div class="col-md-2 column" align="left">-->
+			<!--<input type="checkbox"/>-->
+			<!--<img alt="120x120" width="120rem" height="120rem" src="https://g-search2.alicdn.com/img/bao/uploaded/i4/i1/263726286/TB2qqpCu2iSBuNkSnhJXXbDcpXa_!!263726286-0-item_pic.jpg_460x460Q90.jpg_.webp" />-->
+		<!--</div>-->
+		<!--<div class="col-md-3 column" align="left">-->
+			<!--<p>-->
+				<!--3期免息【当天发/保修2年】Apple/苹果 iPhone 8 全网通4G手机 官方旗舰店-->
+			<!--</p>-->
+		<!--</div>-->
+		<!--<div class="col-md-2 column" align="left">-->
+			<!--<p style="font-size: large;">¥ 4458.00</p>-->
+		<!--</div>-->
+		<!--<div class="col-md-2 column" align="left">-->
+			<!--<input type="number" name="buyNum" value="1"/>-->
+		<!--</div>-->
+		<!--<div class="col-md-2 column" align="left">-->
+			<!--<p style="color: red; font-size: large;">¥ 4458.00</p>-->
+		<!--</div>-->
+		<!--<div class="col-md-1 column" align="left">-->
+			<!--<input type="button" class="btn btn-danger" name="del" value="删除"/>-->
+		<!--</div>-->
+	<!--</div>-->
+	<!-- 结算 -->
+	<div class="row well well-sm">
+		<div class="col-md-12 column" align="right" style="margin-top: 1rem;">
+			<p style="color: red; font-size: large; font-weight: bold;">合计：¥ <span id="sum_money">0.00</span></p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12 column" align="right">
+			<input type="button" class="btn btn-primary btn-lg" id="total" value="结算" />
+		</div>
+	</div>
+	</div>
+	</body>
+
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/operation.js"></script>
+
+	<script>
+        $(function () {
+            var search = window.location.search;
+            //取出用户的id,根据用户id渲染数据
+          var u_id = search.substring(search.length,search.indexOf("=")+1);
+          $("#state").val(u_id);
+          list.start();
+        });
+
+        var list = {
+            //点击结算时
+			total_click:function(){
+			    $("#total").click(function () {
+                    //用户id
+			        var uid = $("#state").val();
+			        if(uid==""){
+			            alert("请选登陆...");
+			            return false;
+					}
+
+			        //获取所有被选中复选框的id
+					var cbox = $("body").find("#cart_list input[type='checkbox']:checked");
+					//如果未选中,提示用户
+					if(cbox.length==0){
+						alert("订单未选中.....");
+						return false;
+					}
+					//拿到被选中复选框的id
+					//存到数组中
+					var arr = [];
+                    for (var i = 0; i <cbox.length; i++) {
+						arr.push($(cbox[i]).val());
+                    }
+
+                    //取出总金额
+					//var sum_money =$("#sum_money").text();
+
+                    //存放数据
+					$.post("/cart_product_total",{arr_c_id:arr.join(",")},function (text) {
+						if(text.msg!="0"){
+                            window.location.href="order.html?c_u_id="+uid+"";
+						}
+					});
+                })
+			},
+            //计算总金额
+            sum_money:function(){
+				var s= $("#cart_list input[type='checkbox']:checked");
+				var c_ids="";
+				var link="";
+				for (var i = 0; i <s.length ; i++){
+					c_ids+=link+$(s[i]).val();
+					link=",";
+				}
+				if(s.length==0){
+                    $("#sum_money").text("0.00");
+                    return false;
+				}
+				$.post("/cart_product_money",{c_ids:c_ids},function (text) {
+					$("#sum_money").text(text.msg);
+                });
+       		 },
+            //监听输入框的值
+			input_num:function(){
+			    $("#cart_list").on("input propertychange","#buyNum",function () {
+				 	var num= $(this).val();
+				 	//获取输入框的父节点
+					var div = $(this.parentNode);
+					//获取当前购物车id
+					var c_id = $(div).prev().prev().prev().find("#c_id").val();
+					//获取上一个兄弟节点里的单价
+					var price = $(div).prev().find("#price").text();
+					//计算金额
+					var price_money= accMul(price,num);
+                    //获取下一个兄弟节点里的金额,并修改值
+                     $(div).next().find("#money").text(price_money);
+					//保存数据
+					if($("#state")=="")
+					    alert("请先登陆......");
+					$.post("/cart_product_update",{c_id:c_id,c_u_id:$("#state").val(),c_num:num,c_money:price_money},function (text) {
+                    	alert(text.msg);
+                       list.cart_product_list();
+					});
+                })
+			},
+            //点击删除时事件
+			cart_delete:function(){
+			    $("#cart_list").on("click","#del",function () {
+					var c_id=$(this).attr("del_id");
+					if (!confirm("确定删除吗？"))
+					    return false;
+					$.post("/cart_product_del",{c_id:c_id},function (text) {
+						alert(text.msg);
+						list.cart_product_list();
+                    })
+                })
+			},
+            //全选按钮事件
+			SelectBox:function(){
+			  $("#boxs").click(function () {
+				  if($(this).is(":checked")){
+                      $("#cart_list input[type='checkbox']").prop("checked",true);
+                      list.sum_money();
+				  }else{
+                      $("#cart_list input[type='checkbox']").prop("checked",false);
+                      //如果复选框未被选中时，总金额清空为( 0.0 )
+                      $("#sum_money").text("0.0");
+             	 }
+              })
+			},
+			//根据用户id渲染购物车列表
+			cart_product_list:function(){
+			    $.get("/cart_product_list",{u_id:$("#state").val()},function (data) {
+					list.data(data);
+                })
+			},
+            //购物车数据模板
+            data:function (data) {
+                var html ="";
+				$.each(data,function (index,obj) {
+				    if(obj.state!="1"){
+                        html += "<div class='row well well-sm box'>";
+                        html += "<div class='col-md-2 column' align='left'>";
+                        html += " <input value='"+obj.c_id+"'  id='c_id' type='checkbox'/>";
+                        html += "  <img alt='120x120' width='120rem' height='120rem' src='/image/"+obj.p_photo+"' />";
+                        html += " </div>";
+                        html += "     <div class='col-md-3 column' align='left'>";
+                        html += "     <p>";
+                        html += obj.p_info;
+                        html += " </p>";
+                        html += " </div>";
+                        html += "<div class='col-md-2 column' align='left'>";
+                        html += "   <p style='font-size: large;'>¥<span id='price'> "+obj.p_price+"</span></p>";
+                        html += "</div>";
+                        html += " <div class='col-md-2 column' align='left'>";
+                        html += "    <input type='number' min='0' id='buyNum' value='"+obj.c_num+"' />";
+                        html += "   </div>";
+                        html += "  <div class='col-md-2 column' align='left'>";
+                        html += "   <p  id='sum' data_sum="+accMul(obj.p_price,obj.c_num)+" style='color: red; font-size: large;'>¥ <span id='money'>"+accMul(obj.p_price,obj.c_num)+"</span></p>";
+                        html += " </div>";
+                        html += " <div class='col-md-1 column' align='left'>";
+                        html += "    <input type='button' del_id='"+obj.c_id+"' class='btn btn-danger delCart' id='del' value='删除'/>";
+                        html += "</div>";
+                        html += " </div>";
+					}
+                });
+				$("#cart_list").html(html);
+            },
+			//任务执行的方法
+			start:function () {
+				list.cart_product_list();
+				list.SelectBox();
+				list.cart_delete();
+				list.input_num();
+				list.total_click();
+				 //
+                $("#cart_list").on("click","#c_id",function () {
+                    list.sum_money();
+                });
+            }
+		}
+
+	</script>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>确认订单</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/ext.css" />
+	</head>
+	<body>
+	<input type="hidden" id="user_id" />
+		<div class="container">
+			<div class="row box" style="margin-bottom: 2rem; margin-top: 2rem;">
+				<div class="col-md-10 column">
+					<h1 style="color: red; margin: auto;">确认订单</h1>
+				</div>
+				<div class="col-md-2 column" align="right">
+					<a href="record.html">订单记录</a>
+					<a href="index.html">返回首页</a>
+				</div>
+			</div>
+			<!-- 地址信息-->
+			<div class="row" style="margin-bottom: 2rem;">
+				<div class="col-md-12 column">
+					<ul class="nav navcolor nav-pills nav-stacked">
+						<li class="active" style="font-size: large;">
+							<a href="#">配送地址</a>
+						</li>
+						<div id="data_address">
+							<!--<li>-->
+							<!--<input type="radio"  name="address"/>&nbsp; 江西省赣州市什么路153号(张三 收) 15818876898-->
+							<!--</li>-->
+							<!--<li>-->
+							<!--<input type="radio" name="address"/>&nbsp; 江西省赣州市什么路153号(张三 收) 15818876898-->
+							<!--</li>-->
+						</div>
+
+						<li>
+							<input type="button" id="newaddr" class="btn btn-info btn-sm" value="使用新地址"/>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<!-- 订单信息 -->
+			<div class="row" style="margin-bottom: 2rem;">
+				<div class="col-md-12 column">
+					<ul class="nav navcolor nav-pills nav-stacked" id="data_commit">
+						<li class="active" style="font-size: large;">
+							<a href="#">订单信息</a>
+						</li>
+						<li>
+							<div class="row">
+								<div class="col-md-1 column" align="left"></div>
+								<div class="col-md-3 column" align="left">商品信息</div>
+								<div class="col-md-3 column" align="left">单价</div>
+								<div class="col-md-2 column" align="left">数量</div>
+								<div class="col-md-3 column" align="left">金额</div>
+							</div>
+						</li>
+						<!--<li>-->
+							<!--<div class="row box">-->
+								<!--<div class="col-md-1 column" align="left">-->
+									<!--<img alt="60x60" style="margin: 1rem;" width="60rem" height="60rem" src="https://g-search2.alicdn.com/img/bao/uploaded/i4/i4/112417306/TB2A6YsjhGYBuNjy0FnXXX5lpXa_!!112417306.jpg_460x460Q90.jpg_.webp" />-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p>-->
+										<!--2017新款27寸5K苹果/Apple iMac Pro一体机台式电脑MQ2Y2CH/A定制-->
+									<!--</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p style="font-size: large;">¥ 33580.00</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-2 column" align="left">-->
+									<!--<p style="font-size: large;">1</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p style="color: red; font-size: large;">¥ 33580.00</p>-->
+								<!--</div>-->
+							<!--</div>-->
+						<!--</li>-->
+						<!--<li>-->
+							<!--<div class="row box">-->
+								<!--<div class="col-md-1 column" align="left">-->
+									<!--<img alt="60x60" style="margin: 1rem;" width="60rem" height="60rem" src="https://g-search2.alicdn.com/img/bao/uploaded/i4/i1/263726286/TB2qqpCu2iSBuNkSnhJXXbDcpXa_!!263726286-0-item_pic.jpg_460x460Q90.jpg_.webp" />-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p>-->
+										<!--3期免息【当天发/保修2年】Apple/苹果 iPhone 8 全网通4G手机 官方旗舰店-->
+									<!--</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p style="font-size: large;">¥ 4458.00</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-2 column" align="left">-->
+									<!--<p style="font-size: large;">1</p>-->
+								<!--</div>-->
+								<!--<div class="col-md-3 column" align="left">-->
+									<!--<p style="color: red; font-size: large;">¥ 4458.00</p>-->
+								<!--</div>-->
+							<!--</div>-->
+						<!--</li>-->
+					</ul>
+				</div>
+			</div>
+			<!-- 结算 -->
+			<div class="row">
+				<div class="col-md-12 column" align="right" style="margin-top: 1rem;">
+					<p style="color: red; font-size: large; font-weight: bold;">实付款：¥ <span id="s_money">0.00</span></p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12 column" align="right">
+					<input type="button" id="suborder" class="btn btn-primary btn-lg" value="提交订单" />
+				</div>
+			</div>
+		</div>
+		<!-- 模式对话框 -->
+		<div id="addrModal"></div>
+	</body>
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script>
+		$(function(){
+			$("#newaddr").on("click",function(){
+				$("#addrModal").load("newaddr.html",function(){
+					$("#newAddrModal").modal('show');
+					$("#btnadd").click(function () {
+						var user= $("#receiveUser").val();
+						var tell=$("#receiveTell").val();
+						var address=$("#receiveAddr").val();
+						if(user==""||tell==""||address==""){
+						    alert("请输入完整的信息....");
+						    return false;
+						}
+						$.post("/new_address",{user:user,tell:tell,address:address},function (text) {
+							alert(text.msg);
+							list.address_info();
+                            $("#newAddrModal").modal('hide');
+                        })
+                    })
+				});
+			});
+			list.start();
+		});
+
+		var list ={
+		    //点击提交订单时按钮事件
+			suborder:function(){
+                $("#suborder").on("click",function(){
+                    //alert("在数据生成订单记录，并更新相应的购物项关联此订单\n，并修改购物项记录的状态为已下单");
+					//取出用户地址的id
+					var ad_id = $("#data_address").find("input[type='radio']:checked").val();
+					//取出总金额
+					var o_money = $("#s_money").text();
+					if(ad_id==undefined){
+					    alert("请添加用户地址..");
+                        return false;
+					}
+					if(o_money=="0.00"){
+						alert("未有订单....");
+						return false;
+					}
+					$.post("/order_commit",{ad_id:ad_id,o_money:o_money},function (text) {
+                        list.data_list();
+						alert(text.msg);
+                    });
+                });
+			},
+		    //去后台取出用户id
+			take_info:function(){
+				$.get("/take_info",function (text) {
+					$("#user_id").val(text.uid);
+                    list.data_list();
+                })
+			},
+			address_info:function(){
+                var uid = $("#user_id").val();
+                if(uid=="") {
+                    alert("请先登陆....");
+                    return false;
+                }
+                $.get("/address_list",{u_id:uid},function (data) {
+                    list.data_address(data);
+                    //默认选择第一个单选按钮
+                    $("#data_address li input[type='radio']:eq(0)").prop("checked",true);
+                });
+			},
+			//渲染用户地址,渲染商品信息,渲染总金额
+            data_list:function(){
+                list.address_info();
+
+				$.get("/take_list",function (data) {
+					list.data(data);
+                });
+				$.get("/task_sumMoney",function (text) {
+                    $("#s_money").text(text.money);
+
+                });
+            },
+			data_address:function(data){
+				var html="";
+			    $.each(data,function (index,obj){
+                	html+="<li>";
+                    html+="<input type='radio' value="+obj.ad_id+" name='address'/>&nbsp; "+obj.ad_address+"("+obj.ad_name+") "+obj.ad_tel+"";
+                    html+="</li>";
+                });
+			    $("#data_address").html(html);
+			},
+			//商品数据模板
+			data:function(data){
+			    var html ="";
+			    $.each(data,function (index,obj) {
+                	html+="<li>";
+					html+="<div class='row box'>";
+					html+="<div class='col-md-1 column' align='left'>";
+					html+="<img alt='60x60' style='margin: 1rem;' width='60rem' height='60rem' src='/image/"+obj.p_photo+"' />";
+					html+="</div>";
+					html+="<div class='col-md-3 column' align='left'>";
+					html+="<p>"+obj.p_info+"</p>";
+                    html+="</div>";
+                    html+="<div class='col-md-3 column' align='left'>";
+                    html+="    <p style='font-size: large;'>¥ "+obj.p_price+"</p>";
+                    html+="</div>";
+                    html+="<div class='col-md-2 column' align='left'>";
+                    html+="    <p style='font-size: large;'>"+obj.c_num+"</p>";
+                    html+="</div>";
+                    html+="<div class='col-md-3 column' align='left'>";
+                    html+="<p style='color: red; font-size: large;'>¥ "+obj.c_sum+"</p>";
+                    html+="</div>";
+                    html+="</div>";
+                    html+="</li>";
+                });
+			    $("#data_commit").html(html);
+			},
+		    //执行任务的方法
+		    start:function () {
+				list.take_info();
+				list.suborder();
+            }
+		};
+
+
+	</script>
+</html>

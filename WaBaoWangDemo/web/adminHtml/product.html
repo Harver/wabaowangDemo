@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商品信息列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../layui/plugins/layui/css/layui.css"  media="all">
+    <style>
+        .imgsize{
+            width: 175px;
+            height: 58px;
+            margin:0px auto;
+        }
+        table{
+            text-align:center;
+        }
+        .layui-table-cell{
+            text-align:center;
+            height:55px;
+            line-height:55px;
+        }
+        .imageupdate{
+            width:120px;
+            height:120px
+        }
+    </style>
+</head>
+<body>
+
+    <button class="layui-btn" id="btnAdd">
+        <i class="layui-icon">&#xe608;</i> 新增商品
+    </button>
+    <button class="layui-btn" id="btn_type_add">
+        <i class="layui-icon">&#xe608;</i> 新增分类
+    </button>
+    <!--表格-->
+    <table class="layui-hide" id="p_list" lay-filter="test"></table>
+    <!--商品图片-->
+    <script type="text/html" id="imgs">
+        <!--src="image/{{d.picture}}"-->
+        <img src="/image/{{d.p_photo}}" title="{{d.p_info}}" class="imgsize" id="imgg"/>
+    </script>
+    <!--商品状态-->
+    <script type="text/html" id="switchTpl">
+        <input type="checkbox" name="state" value="{{d.p_state}}" lay-skin="switch" lay-text="上架|下架" lay-filter="stateDemo" {{ d.p_state ==1 ? 'checked' : '' }}>
+    </script>
+
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">更新</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../layui/plugins/layui/layui.js" charset="utf-8"></script>
+
+    <script>
+        //更新数据
+        var list_data =function(){
+            layui.use('table',function () {
+                var table = layui.table;
+                var $=layui.jquery;
+                table.render({
+                    elem: '#p_list'
+                    ,height:440
+                    ,url:'../p_admin_list'
+                    ,title: '用户数据表'
+                    ,cols: [[
+                        //{type: 'checkbox', fixed: 'left'}
+                        {field:'p_id', title:'ID', width:80, fixed: 'left', unresize: true, sort: true},
+                        {field:'p_photo', title:'商品图片', width:240,templet:'#imgs'}
+                        ,{field:'p_info', title:'商品信息', width:300, edit: 'text'}
+                        ,{field:'p_price', title:'单价', width:100, edit: 'text', sort: true}
+                        ,{field:'t_name', title:'类型', width:100}
+                        ,{field: 'p_state', title: '状态', width: 120,templet: '#switchTpl', unresize: true}
+                        ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:150}
+                    ]]
+                    ,page: true
+                });
+            })
+        }
+        list_data();
+        //监听表格
+        layui.use(['table','form','layer'], function(){
+            var table = layui.table;
+            var $=layui.jquery;
+            var form = layui.form;
+            var layer= layui.layer;
+            //监听行工具事件
+            table.on('tool(test)', function(obj){
+                var data = obj.data;
+                //console.log(obj)
+                if(obj.event === 'del'){
+                    layer.confirm('真的删除行么', function(index){
+                        //obj.del();
+                        //当前商品id
+                        var p_id=data.p_id;
+                        layer.msg("请联系管理员...，此功能待考虑中...");
+                        layer.close(index);
+                    });
+                } else if(obj.event === 'edit'){
+                    var pname = data.p_info;
+                    var photo = data.p_photo;
+                    var price = data.p_price;
+                    var type_id = data.p_t_id;
+                    var pstate = data.p_state;
+
+                    $("#name").val(pname);
+                    $("#price").val(price);
+                    $("#form1").find("input[type='radio'][value='"+pstate+"']").prop("checked",true);
+                    $("#list_type option[value="+type_id+"]").prop("selected","selected");
+                    $("#demo1").addClass("imageupdate");
+                    $("#demo1").attr("src","/image/"+photo);
+                    form.render("select");
+                    form.render("radio");
+                   // console.log("图片"+photo+"单价"+price+"类型"+ptype+"状态"+pstate);
+                    var index = layer.open({
+                        type:1
+                        ,anim:4
+                        ,title:'更新商品'
+                        ,area:['600px','450px']
+                        ,content:$('#form1')
+                        ,zIndex: layer.zIndex //重点1
+                        ,btn:['更新','关闭']
+                        ,yes:function () {
+                            var p_info = $("#name").val();
+                            var p_price = $("#price").val();
+                            var p_state = $("#form1").find("input[type='radio']:checked").val();
+                            var p_photo = $("#imgName").val();
+                            var t_id = $("#list_type option:selected").val();
+                            if (p_info == "" || p_price < 0 || p_price == "") {
+                                layer.msg("内容未填完整......");
+                                return false;
+                            }
+                            if (t_id == 0) {
+                                layer.msg("类型未选择......");
+                                return false;
+                            }
+                            $.post("/p_admin_update",{p_id:data.p_id,p_info:p_info,t_id:t_id,p_price:p_price,p_state:p_state,p_photo:p_photo},function (text) {
+                                layer.msg(text.msg);
+                                layer.close(index);
+                                list_data();
+                            })
+                        }
+                    });
+                }
+            });
+            //监听状态事件
+            form.on('switch(stateDemo)',function (obj) {
+                //layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+                var p_id=$(obj.othis).parent().parent().parent().find(".laytable-cell-1-p_id").text();
+                var state = 0;
+                if(obj.elem.checked){
+                    state = 1;
+                }
+                $.get("/p_admin_state",{p_id:p_id,p_state:state},function (text) {
+                    layer.msg(text.msg);
+                })
+            });
+
+        });
+        //弹出框
+        layui.use(['layer','form'],function () {
+            var layer = layui.layer;
+            var form = layui.form;
+            //商品添加按钮
+            $("#btnAdd").click(function () {
+                //每次进来,数据都清空
+                $("#name").val("");
+                $("#price").val("");
+                $("#form1").find("input[type='radio'][value='0']").prop("checked",true);
+                $("#imgName").val("");
+                $("#list_type option[value='0']").prop("selected","selected");
+                $("#demo1").removeClass("imageupdate");
+                $('#demo1').attr("src","");
+
+                //刷新表单数据
+                form.render('select');
+                form.render("radio");
+                layer.open({
+                    type:1
+                    ,anim:4
+                    ,title:'添加商品'
+                    ,area:['600px','450px']
+                    ,content:$('#form1')
+                    ,zIndex: layer.zIndex //重点1
+                    ,btn:['添加','关闭']
+                    ,yes:function() {
+                        var p_info=$("#name").val();
+                        var p_price=$("#price").val();
+                        var p_state=$("#form1").find("input[type='radio']:checked").val();
+                        var p_photo =$("#imgName").val();
+
+                        var t_id = $("#list_type option:selected").val();
+                        if(p_info==""||p_price<0||p_price==""){
+                            layer.msg("内容未填完整......");
+                            return false;
+                        }
+                        if(t_id==0){
+                            layer.msg("类型未选择......");
+                            return false;
+                        }
+                        $.post("/p_admin_add",{p_info:p_info,t_id:t_id,p_price:p_price,p_state:p_state,p_photo:p_photo},function (text) {
+                            layer.msg(text.msg);
+                            list_data();
+                        });
+                        layer.closeAll();
+
+                     }
+                });
+            });
+            //分类新增按钮
+            $("#btn_type_add").click(function () {
+                var index = layer.open({
+                    type: 1
+                    ,anim:4
+                    ,title: false //不显示标题栏
+                    ,closeBtn: false
+                    ,area: ['350px','300px']
+                    ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
+                    ,btn: ['确定', '关闭']
+                    ,btnAlign: 'c'
+                    ,moveType: 1 //拖拽模式，0或者1
+                    ,content:$('#form2')
+                    ,yes: function(){
+                        var t_name = $("#type_name").val();
+                        if(t_name==""){
+                            layer.msg("未输入....");
+                            return false;
+                        }
+                        $.post("/p_admin_type_name",{t_name:t_name},function (text) {
+                            layer.msg(text.msg);
+                            $("#type_name").val("");
+                            //再次刷新下拉框
+                            list.list_type();
+                        });
+                        layer.close(index);
+                    }
+                });
+            })
+
+        });
+        var list ={
+            //查询分类信息
+            list_type:function () {
+                //加载下拉框类型
+                $.get("/p_type_list",function (data) {
+                    $.each(data,function (index,obj) {
+                        $("<option  value="+obj.t_id+" text="+obj.t_name+" >"+obj.t_name+"</option>").appendTo($("#list_type"));
+                    });
+                });
+            },
+            start:function () {
+                list.list_type();
+            }
+        };
+        list.start();
+
+    </script>
+
+    <script>
+        //上传图片操作
+        layui.use('upload', function(){
+            var $ = layui.jquery
+                ,upload = layui.upload;
+
+            //普通图片上传
+            var uploadInst = upload.render({
+                elem: '#test1'
+                ,url: '/p_admin_img'
+                ,before: function(obj){
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function(index, file, result){
+                        $('#demo1').attr('src', result); //图片链接（base64）
+                    });
+                }
+                ,done: function(res){
+                    //如果上传失败
+                    if(res.code > 0){
+                        return layer.msg('上传失败');
+                    }
+                    //上传成功
+                    layer.msg(res.msg);
+                    //图片的名称
+                    //console.log(res.data.name);
+                    $("#imgName").val(res.data.name);
+                }
+                ,error: function(){
+                    //演示失败状态，并实现重传
+                    var demoText = $('#demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function(){
+                        uploadInst.upload();
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+<!--表单-->
+<fieldset id="form1" hidden="hidden" >
+    <legend>添加商品</legend>
+    <form class="layui-form" >
+        <div style="width:340px;height: 300px;float: left;">
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品信息</label>
+                <div class="layui-input-block">
+                    <input style="width: 182px;height: 40px;" type="text" id="name"  required  lay-verify="required" placeholder="请输入商品名称" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品类型:</label>
+                <div class="layui-input-inline" style="width:182px" >
+                    <select id="list_type">
+                        <option value=0 >请选择类型</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品价格</label>
+                <div class="layui-input-block">
+                    <input style="width: 182px;height: 40px;" type="number" min="0" id="price" name="price" required  lay-verify="required" placeholder="请输入商品价格" autocomplete="off" class="layui-input" />
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品状态</label>
+                <div class="layui-inline"> <!-- 注意：这一层元素并不是必须的 -->
+                    <input type="radio" name="state" id="state" value="1"  title="上架" >
+                    <input type="radio" name="state" id="state1" value="0" checked title="下架" >
+                </div>
+            </div>
+
+            <div class="layui-upload" style="width:100px;float: left;margin-left: 380px;margin-top: -210px;">
+                <button type="button" class="layui-btn" id="test1">上传图片</button>
+                <div class="layui-upload-list">
+                    <img class="layui-upload-img" id="demo1" />
+                    <input type="hidden" name="imgName" id="imgName" value="" />
+                </div>
+            </div>
+
+        </div>
+    </form>
+</fieldset>
+<!--分类弹窗-->
+<fieldset hidden id="form2" class="layui-elem-field layui-field-title" >
+    <legend><span style="font-size: 14px">商品类型添加</span></legend>
+        <div class="layui-inline" style="margin-top:100px" >
+            <label class="layui-form-label">商品类型</label>
+            <div class="layui-input-inline">
+                <input type="text" id="type_name" autocomplete="off"  placeholder="请输入商品分类类型" class="layui-input">
+            </div>
+        </div>
+</fieldset>
+
+
+</html>
